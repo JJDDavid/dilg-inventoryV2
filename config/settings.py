@@ -26,7 +26,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-5_6*wbgz@p!5(8y3volma
 # Default to DEBUG off; set DEBUG=1 in your local environment for development.
 DEBUG = os.environ.get('DEBUG', '0') == '1'
 
-_default_hosts = 'localhost,127.0.0.1,JJDDavid.pythonanywhere.com'
+_default_hosts = 'localhost,127.0.0.1,mpdilginventory.pythonanywhere.com'
 _env_hosts = os.environ.get('ALLOWED_HOSTS', '')
 _hosts = [h.strip() for h in _env_hosts.split(',') if h.strip()]
 if not _hosts:
@@ -36,6 +36,8 @@ ALLOWED_HOSTS = _hosts
 _csrf_trusted = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 if _csrf_trusted:
     CSRF_TRUSTED_ORIGINS = [h.strip() for h in _csrf_trusted.split(',') if h.strip()]
+elif not DEBUG:
+    CSRF_TRUSTED_ORIGINS = ['https://mpdilginventory.pythonanywhere.com']
 
 
 # Application definition
