@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from requisitions.models import SupplyRequestItem
+from requisitions.models import SupplyRequest, SupplyRequestItem
 
 from .forms import IncomingSupplyForm, SupplyForm
 from .models import IncomingSupply, Supply
@@ -104,6 +104,8 @@ def dashboard(request):
 	low_stock_count = low_stock.count()
 	no_stock_count = no_stock.count()
 
+	pending_requests_count = SupplyRequest.objects.filter(status=SupplyRequest.STATUS_PENDING, is_archived=False).count()
+
 	top_requested = (
 		SupplyRequestItem.objects.filter(request__status='approved')
 		.values('supply__name')
@@ -133,6 +135,7 @@ def dashboard(request):
 		'top_requested': top_requested,
 		'chart_labels': chart_labels,
 		'chart_values': chart_values,
+		'pending_requests_count': pending_requests_count,
 	}
 	return render(request, 'supplies/dashboard.html', context)
 

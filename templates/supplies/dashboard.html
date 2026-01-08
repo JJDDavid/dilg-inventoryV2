@@ -43,8 +43,17 @@
     <p class="mb-0 text-muted">Live view of supplies, shortages, and outgoing trends.</p>
   </div>
   <div class="d-flex gap-2 flex-wrap">
+    <span class="stat-chip" style="background: rgba(15,17,21,0.06); color: #0f1115;">
+      <span id="live-date">—</span>
+      <span id="live-clock" class="fw-bold">--:--:--</span>
+    </span>
     <span class="stat-chip chip-amber">Low stock ≤ {{ low_stock_threshold }}</span>
     <span class="stat-chip chip-red">No stock shows in red</span>
+    {% if pending_requests_count %}
+    <span class="stat-chip chip-amber">{{ pending_requests_count }} pending request{{ pending_requests_count|pluralize }}</span>
+    {% else %}
+    <span class="stat-chip chip-green">No pending requests</span>
+    {% endif %}
   </div>
 </div>
 
@@ -168,6 +177,21 @@
 
 {% block extra_js %}
 <script>
+  (function() {
+    const dateEl = document.getElementById('live-date');
+    const timeEl = document.getElementById('live-clock');
+    if (!dateEl || !timeEl) return;
+    const dateFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' });
+    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    function tick() {
+      const now = new Date();
+      dateEl.textContent = dateFmt.format(now);
+      timeEl.textContent = now.toLocaleTimeString([], timeOpts);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+
   const labels = {{ chart_labels|safe }};
   const data = {{ chart_values|safe }};
   const ctx = document.getElementById('outgoingChart');

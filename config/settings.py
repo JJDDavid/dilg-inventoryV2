@@ -13,14 +13,6 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
-
-def env_bool(name: str, default: bool = False) -> bool:
-    """Parse a boolean environment variable."""
-    val = os.environ.get(name)
-    if val is None:
-        return default
-    return val.strip().lower() in ('1', 'true', 'yes', 'on')
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,9 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-5_6*wbgz@p!5(8y3volma1r)n3w%b*%)wc4rl*armz$rrx@3y=')
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
 # Default to DEBUG off; set DEBUG=1 in your local environment for development.
-DEBUG = env_bool('DEBUG', default=False)
+DEBUG = os.environ.get('DEBUG', '0') == '1'
 
 _default_hosts = 'localhost,127.0.0.1,mpdilginventory.pythonanywhere.com'
 _env_hosts = os.environ.get('ALLOWED_HOSTS', '')
@@ -44,9 +35,9 @@ ALLOWED_HOSTS = _hosts
 
 _csrf_trusted = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 if _csrf_trusted:
-	CSRF_TRUSTED_ORIGINS = [h.strip() for h in _csrf_trusted.split(',') if h.strip()]
+    CSRF_TRUSTED_ORIGINS = [h.strip() for h in _csrf_trusted.split(',') if h.strip()]
 elif not DEBUG:
-	CSRF_TRUSTED_ORIGINS = ['https://mpdilginventory.pythonanywhere.com']
+    CSRF_TRUSTED_ORIGINS = ['https://mpdilginventory.pythonanywhere.com']
 
 
 # Application definition
@@ -151,40 +142,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Security hardening for production deployments
 if not DEBUG:
-    SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', True)
-    CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', True)
-    SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', False)  # Enable when HTTPS is fully configured
-    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))  # Increase (e.g., 31536000) after confirming HTTPS works
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', True)
-    SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', False)
-    if env_bool('USE_X_FORWARDED_PROTO', False):
-        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    CSRF_COOKIE_SAMESITE = 'Lax'
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    SECURE_REFERRER_POLICY = 'same-origin'
-
-# Logging to console by default; adjust levels via DJANGO_LOG_LEVEL
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'simple': {
-            'format': '[{levelname}] {asctime} {name}: {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
-    },
-}
-
-# Email backend defaults to console; override in production via env
-EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@example.com')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = False  # Set True if HTTPS is enforced end-to-end
+    SECURE_HSTS_SECONDS = 0  # Increase (e.g., 31536000) after confirming HTTPS works
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = False

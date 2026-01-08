@@ -46,6 +46,18 @@
 
             <p class="helper mb-4">Secure access for admins and requestors. Keep your credentials private.</p>
 
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+              </div>
+            {% endif %}
+
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+
             <form method="post" class="mb-0">
               {% csrf_token %}
               {% for field in form %}
