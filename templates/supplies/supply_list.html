@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Supplies</h2>
+  <div>
+    <a class="btn btn-primary" href="{% url 'supply_create' %}">Add Supply</a>
+    <a class="btn btn-outline-secondary" href="{% url 'record_incoming' %}">Record Incoming</a>
+  </div>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-sm-6 col-md-5 col-lg-4">
+    <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search by name, description, or size/spec">
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <select name="category" class="form-select" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <a class="btn btn-outline-secondary" href="{% url 'supply_list' %}">Clear</a>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-primary" type="submit">Search</button>
+  </div>
+</form>
+
+<table class="table table-striped table-hover align-middle">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Size / Specification</th>
+      <th>Category</th>
+      <th>No. of Boxes</th>
+      <th>Items / Box</th>
+      <th>Quantity</th>
+      <th>Unit</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for supply in supplies %}
+    <tr>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <span>{{ supply.name }}</span>
+          {% with qty=supply.quantity|default:0 %}
+            {% if qty <= 0 %}
+              <span class="badge bg-danger">Out of stock</span>
+            {% elif qty <= low_stock_threshold %}
+              <span class="badge bg-warning text-dark">Low on stock</span>
+            {% else %}
+              <span class="badge bg-success">Available</span>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </td>
+      <td class="small">{{ supply.size_spec|default:'-' }}</td>
+      <td>{{ supply.category|default:'—' }}</td>
+      <td>{{ supply.boxes_count }}</td>
+      <td>{{ supply.items_per_box }}</td>
+      <td>{{ supply.quantity }}</td>
+      <td>{{ supply.unit }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'supply_update' supply.id %}">Edit</a>
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'supply_delete' supply.id %}">Delete</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="text-center">No supplies yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

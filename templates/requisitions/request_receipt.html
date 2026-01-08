@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .receipt {
+    background: linear-gradient(135deg, #ffffff, #f9fbff);
+    border: 1px solid #e7ebf3;
+    border-radius: 16px;
+    padding: 20px 22px 18px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.07);
+    max-width: 940px;
+    margin: 0 auto;
+  }
+  .receipt-ribbon {
+    height: 4px;
+    width: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #c1121f, #f28c28);
+    margin-bottom: 14px;
+  }
+  .receipt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .receipt-title { font-size: 20px; font-weight: 800; margin: 0; }
+  .meta { color: #6c757d; font-size: 13px; margin: 0; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 12px; font-weight: 700; background: rgba(25,135,84,0.14); color: #157347; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    background: rgba(17, 24, 39, 0.06);
+    color: #0f1115;
+  }
+  .table thead th { text-transform: uppercase; letter-spacing: 0.3px; font-size: 12px; color: #6c757d; border: none; background: rgba(25,135,84,0.08); }
+  .table tbody td { border-color: #f1f2f6; }
+  .table tbody tr:nth-child(every) { background: #fafbff; }
+  .section-title { font-weight: 800; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase; color: #8f0d18; margin-bottom: 6px; }
+  @media print {
+    .no-print { display: none !important; }
+    body { background: #fff; }
+    .receipt { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+
+<div class="receipt">
+  <div class="receipt-ribbon"></div>
+  <div class="receipt-header">
+    <div>
+      <p class="receipt-title mb-1">Supply Request Receipt</p>
+      <p class="meta mb-0">Request #{{ req.id }} • Approved</p>
+      <p class="meta mb-0">Approved on {{ req.decision_at|date:'Y-m-d H:i' }} by {{ req.decided_by.get_full_name|default:req.decided_by.username }}</p>
+    </div>
+    <div class="text-end">
+      <div class="pill">Approved</div>
+      <button class="btn btn-outline-secondary btn-sm no-print" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="fw-semibold">Requester</div>
+      <div class="meta">{{ req.requester_name|default:req.user.get_full_name|default:req.user.username }}</div>
+    </div>
+    <div class="col-md-4">
+      <div class="fw-semibold">ID</div>
+      <div class="meta">{{ req.organization_name|default:'-' }}</div>
+    </div>
+    <div class="col-md-4">
+      <div class="fw-semibold">Office Section</div>
+      <div class="meta">{{ req.department|default:'-' }}</div>
+    </div>
+    <div class="col-md-4 mt-3">
+      <div class="fw-semibold">Submitted</div>
+      <div class="meta">{{ req.requested_at|date:'Y-m-d H:i' }}</div>
+    </div>
+    <div class="col-md-4 mt-3">
+      <div class="fw-semibold">Approved</div>
+      <div class="meta">{{ req.decision_at|date:'Y-m-d H:i' }}</div>
+    </div>
+    <div class="col-md-4 mt-3">
+      <div class="fw-semibold">Status</div>
+      <div class="pill">Approved</div>
+    </div>
+  </div>
+
+  <div class="section-title">Items</div>
+  <div class="table-responsive mb-3">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:90px">Qty.</th>
+          <th>Item</th>
+          <th>Size / Specification</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.quantity }} {{ item.supply.unit }}</td>
+          <td>
+            <div class="fw-semibold">{{ item.supply.name }}</div>
+            <div class="small text-muted">{{ item.supply.description|default:'-' }}</div>
+          </td>
+          <td>{{ item.supply.size_spec|default:'-' }}</td>
+          <td>{{ item.supply.category|default:'—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if req.notes %}
+  <div class="mb-2">
+    <div class="fw-semibold">Notes</div>
+    <div class="meta">{{ req.notes }}</div>
+  </div>
+  {% endif %}
+
+  <div class="meta">Generated on {{ generated_at|date:'Y-m-d H:i' }}</div>
+</div>
+{% endblock %}

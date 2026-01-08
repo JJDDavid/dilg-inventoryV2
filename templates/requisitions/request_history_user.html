@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h2 class="mb-1">My Request History</h2>
+    <p class="text-muted mb-0">All requests you've submitted, including removed ones.</p>
+  </div>
+</div>
+
+{% if not requests %}
+  <div class="alert alert-info">You haven't submitted any requests yet.</div>
+{% else %}
+  <div class="mb-3 d-flex flex-wrap gap-2">
+    <span class="badge badge-status badge-status-pending">Pending: {{ counts.pending }}</span>
+    <span class="badge badge-status badge-status-approved">Approved: {{ counts.approved }}</span>
+    <span class="badge badge-status badge-status-rejected">Rejected: {{ counts.rejected }}</span>
+    <span class="badge bg-secondary">Total: {{ requests|length }}</span>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th class="text-nowrap">Requested</th>
+              <th>Status</th>
+              <th>Visibility</th>
+              <th>Items</th>
+              <th>Notes</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requests %}
+              <tr>
+                <td class="text-nowrap">{{ req.requested_at|date:'M d, Y h:i A' }}</td>
+                <td>
+                  {% if req.status == 'pending' %}
+                    <span class="badge badge-status badge-status-pending">Pending</span>
+                  {% elif req.status == 'approved' %}
+                    <span class="badge badge-status badge-status-approved">Approved</span>
+                  {% else %}
+                    <span class="badge badge-status badge-status-rejected">Rejected</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if req.is_archived %}
+                    <span class="badge bg-secondary">Archived</span>
+                  {% else %}
+                    <span class="badge bg-light text-muted">Active</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% with req.items.all as items %}
+                    {% if items %}
+                      <ul class="mb-0 ps-3">
+                        {% for item in items %}
+                          <li>{{ item.quantity }} x {{ item.supply.name }}{% if item.supply.size_spec %} ({{ item.supply.size_spec }}){% endif %}</li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <span class="text-muted">No items</span>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                <td class="text-truncate" style="max-width: 260px;">{{ req.notes|default:'—' }}</td>
+                <td class="text-end">
+                  {% if req.status == 'approved' %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'request_receipt' req.id %}" target="_blank">Receipt</a>
+                  {% else %}
+                    <span class="text-muted small">No actions</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .incoming-hero {
+    background: linear-gradient(120deg, rgba(193, 18, 31, 0.08), rgba(244, 180, 0, 0.14));
+    border: 1px solid rgba(0,0,0,0.03);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+  .incoming-hero h2 { margin: 0 0 6px 0; }
+  .incoming-hero p { margin: 0; color: #6c757d; }
+  .badge-status-pending { background: rgba(244, 180, 0, 0.18); color: #8a5a00; }
+  .badge-status-received { background: rgba(25, 135, 84, 0.14); color: #0f7a3c; }
+  .field-label { font-weight: 700; color: #0f1115; }
+  .card-header-soft { background: linear-gradient(90deg, rgba(244, 180, 0, 0.12), rgba(242, 140, 40, 0.1)); }
+  .table thead th { text-transform: uppercase; letter-spacing: 0.3px; font-size: 12px; color: #6c757d; }
+</style>
+
+<div class="incoming-hero">
+  <h2 class="mb-1">Record Incoming Supply</h2>
+  <p>Track expected deliveries here. Mark as received to add items into inventory.</p>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="card-title fw-bold mb-3">Add Expected Delivery</div>
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-4">
+        <label class="form-label field-label">Supply</label>
+        {{ form.supply }}
+        {% for error in form.supply.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label field-label">No. of Boxes</label>
+        {{ form.boxes_count }}
+        {% for error in form.boxes_count.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div class="form-text">Quantity auto-calculated from supply definition.</div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label field-label">Expected Date</label>
+        {{ form.expected_date }}
+        {% for error in form.expected_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-12">
+        <label class="form-label field-label">Notes</label>
+        {{ form.notes }}
+        {% for error in form.notes.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-secondary" href="{% url 'supply_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header card-header-strong card-header-soft fw-bold d-flex align-items-center justify-content-between">
+    <span>Incoming Queue</span>
+    <span class="badge badge-status badge-status-pending">Pending: {{ incoming_list|length }}</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th style="width:220px">Item</th>
+            <th style="width:110px">Unit</th>
+            <th style="width:110px">Quantity</th>
+            <th style="width:110px">Expected</th>
+            <th style="width:100px">Status</th>
+            <th>Notes</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inc in incoming_list %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ inc.supply.name }}</div>
+              <div class="small text-muted">{{ inc.supply.size_spec|default:'-' }}</div>
+            </td>
+            <td>{{ inc.supply.unit|default:'-' }}</td>
+            <td>{{ inc.quantity }}</td>
+            <td>{% if inc.expected_date %}{{ inc.expected_date|date:'Y-m-d' }}{% else %}-{% endif %}</td>
+            <td>
+              {% if inc.status == 'received' %}
+              <span class="badge badge-status badge-status-received">Received</span>
+              {% else %}
+              <span class="badge badge-status badge-status-pending">Pending</span>
+              {% endif %}
+            </td>
+            <td class="text-muted small">{{ inc.notes|default:'—' }}</td>
+            <td class="text-end">
+              {% if inc.status == 'pending' %}
+                <form method="post" action="{% url 'incoming_receive' inc.id %}">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-primary">Add to Inventory</button>
+                </form>
+              {% else %}
+                <span class="text-muted small">Added on {{ inc.received_at|date:'Y-m-d H:i' }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center py-3 text-muted">No incoming supplies recorded yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

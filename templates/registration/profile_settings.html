@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .profile-settings .card { border-radius: 18px; overflow: hidden; }
+  .profile-settings .card-header { background: linear-gradient(90deg, rgba(241,18,31,0.12), rgba(242,140,40,0.12)); font-weight: 700; }
+  .profile-settings label { font-weight: 700; color: #0f1115; }
+  .profile-settings input[type="text"],
+  .profile-settings input[type="password"] {
+    width: 100%;
+    border: 1px solid #e0e4ec;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    transition: all 0.15s ease;
+  }
+  .profile-settings input[type="text"]:focus,
+  .profile-settings input[type="password"]:focus {
+    outline: none;
+    border-color: #f28c28;
+    box-shadow: 0 0 0 0.15rem rgba(242, 140, 40, 0.28);
+  }
+  .profile-settings .helper {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  .profile-settings .pill {
+    display: inline-block;
+    background: rgba(241,18,31,0.12);
+    color: #8f0d18;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .profile-settings .btn-primary { min-width: 160px; }
+</style>
+
+<div class="profile-settings">
+  <div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-3">
+    <div>
+      <div class="pill mb-2">Profile & Security</div>
+      <h2 class="mb-1">Keep your account safe</h2>
+      <p class="helper mb-0">Update your username and rotate your password regularly to protect access.</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card shadow-sm h-100">
+        <div class="card-header">Update Username</div>
+        <div class="card-body">
+          <p class="helper">Pick a clear identifier so teammates know who performed updates.</p>
+          <form method="post" class="mb-0">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="username">
+            {% for field in username_form %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            {% endfor %}
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-primary" type="submit">Save Username</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card shadow-sm h-100">
+        <div class="card-header">Change Password</div>
+        <div class="card-body">
+          <p class="helper">Use a strong, unique password that you have not used elsewhere.</p>
+          <form method="post" class="mb-0">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="password">
+            {% for field in password_form %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text small">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            {% endfor %}
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-primary" type="submit">Update Password</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

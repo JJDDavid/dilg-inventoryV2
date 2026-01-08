@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Select Supplies to Request</h2>
+<p class="text-muted">Check the supplies you need and enter quantities. Then proceed to the request form to fill in your details.</p>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-sm-8 col-md-6 col-lg-4">
+    <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search by name, description, or size/spec">
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <select name="category" class="form-select" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-primary" type="submit">Search</button>
+  </div>
+  <div class="col-auto">
+    <a class="btn btn-outline-secondary" href="{% url 'request_select_supplies' %}">Clear</a>
+  </div>
+</form>
+
+<form method="post" class="card card-body shadow-sm">
+  {% csrf_token %}
+  <div class="d-flex gap-2 mb-3">
+    <button class="btn btn-primary" type="submit">Add Selected & Continue</button>
+    <a class="btn btn-secondary" href="{% url 'request_list' %}">Cancel</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th style="width:70px"></th>
+          <th style="width:90px">Qty.</th>
+          <th>Item / Description</th>
+          <th style="width:180px">Size / Specification</th>
+          <th style="width:160px">Available</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for group in grouped_supplies %}
+        {% with default_supply=group.variants.0 %}
+        <tr>
+          <td class="text-center align-middle">
+            <input class="form-check-input" type="checkbox" name="select_{{ forloop.counter0 }}" value="1">
+          </td>
+          <td>
+            <input type="number" min="0" name="quantity_{{ forloop.counter0 }}" class="form-control form-control-sm" placeholder="0">
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fw-semibold">{{ group.name }}</span>
+              {% with qty=default_supply.quantity|default:0 %}
+                {% if qty <= 0 %}
+                  <span class="badge bg-danger" data-availability-badge>Out of stock</span>
+                {% elif qty <= low_stock_threshold %}
+                  <span class="badge bg-warning text-dark" data-availability-badge>Low on stock</span>
+                {% else %}
+                  <span class="badge bg-success" data-availability-badge>Available</span>
+                {% endif %}
+              {% endwith %}
+            </div>
+            <div class="small text-muted">{{ default_supply.description|default:'-' }}</div>
+          </td>
+          <td>
+            <select class="form-select form-select-sm" name="supply_choice_{{ forloop.counter0 }}" data-variant-select>
+              {% for option in group.variants %}
+              <option value="{{ option.id }}"
+                      data-available="{% if option.unit == 'pack' or option.unit == 'ream' %}{{ option.boxes_count }}{% else %}{{ option.quantity }}{% endif %}"
+                      data-unit="{{ option.unit }}">
+                {{ option.size_spec|default:'Standard' }}
+              </option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            {% if default_supply.unit == 'pack' or default_supply.unit == 'ream' %}
+              <span data-availability-text data-unit="{{ default_supply.unit }}">{{ default_supply.boxes_count }} {{ default_supply.unit }}</span>
+            {% else %}
+              <span data-availability-text data-unit="{{ default_supply.unit }}">{{ default_supply.quantity }} {{ default_supply.unit }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="5" class="text-center">No supplies available.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+<script>
+(function() {
+  const threshold = {{ low_stock_threshold|default:2 }};
+  document.querySelectorAll('[data-variant-select]').forEach(function(sel) {
+    sel.addEventListener('change', function() {
+      const opt = sel.options[sel.selectedIndex];
+      const available = parseInt(opt.dataset.available || '0', 10);
+      const unit = opt.dataset.unit || '';
+      const row = sel.closest('tr');
+      const badge = row.querySelector('[data-availability-badge]');
+      const availText = row.querySelector('[data-availability-text]');
+      if (availText) {
+        availText.dataset.unit = unit;
+        availText.textContent = available + ' ' + unit;
+      }
+      if (badge) {
+        badge.className = 'badge';
+        if (available <= 0) {
+          badge.classList.add('bg-danger');
+          badge.textContent = 'Out of stock';
+        } else if (available <= threshold) {
+          badge.classList.add('bg-warning', 'text-dark');
+          badge.textContent = 'Low on stock';
+        } else {
+          badge.classList.add('bg-success');
+          badge.textContent = 'Available';
+        }
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

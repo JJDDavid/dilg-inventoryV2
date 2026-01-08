@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  body { background: #f6f7fb; }
+  .dashboard-hero {
+    background: radial-gradient(circle at 10% 20%, rgba(193, 18, 31, 0.16), transparent 30%),
+                radial-gradient(circle at 90% 10%, rgba(242, 140, 40, 0.16), transparent 35%),
+                linear-gradient(135deg, #ffffff, #f8f0e9);
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 18px 38px rgba(0,0,0,0.06);
+  }
+  .stat-card {
+    display: grid;
+    gap: 6px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.04);
+    background: #fff;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.06);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 20px 46px rgba(0,0,0,0.08); }
+  .stat-card .label { color: #6c757d; letter-spacing: 0.3px; font-size: 12px; text-transform: uppercase; }
+  .stat-card .value { font-size: 30px; font-weight: 800; color: #0f1115; }
+  .stat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 12px; font-weight: 700; }
+  .chip-red { background: rgba(193,18,31,0.12); color: #8f0d18; }
+  .chip-amber { background: rgba(242,140,40,0.14); color: #b55f0a; }
+  .chip-green { background: rgba(25,135,84,0.14); color: #157347; }
+  .list-group-item { border: none; padding: 12px 0; }
+  .list-group-flush > .list-group-item + .list-group-item { border-top: 1px solid #eceef5; }
+  .chart-card canvas { max-height: 240px; }
+  .muted-label { color: #6c757d; font-size: 14px; }
+  .card.shadow-sm { transition: transform 150ms ease, box-shadow 150ms ease; }
+  .card.shadow-sm:hover { transform: translateY(-2px); box-shadow: 0 18px 38px rgba(0,0,0,0.07); }
+</style>
+
+<div class="dashboard-hero d-flex flex-wrap justify-content-between align-items-center">
+  <div>
+    <h2 class="mb-1">Admin Dashboard</h2>
+    <p class="mb-0 text-muted">Live view of supplies, shortages, and outgoing trends.</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <span class="stat-chip chip-amber">Low stock ≤ {{ low_stock_threshold }}</span>
+    <span class="stat-chip chip-red">No stock shows in red</span>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="label">Supply Types</div>
+      <div class="value">{{ total_supplies }}</div>
+      <span class="stat-chip chip-green">Active</span>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="label">Total Quantity</div>
+      <div class="value">{{ total_quantity }}</div>
+      <span class="stat-chip chip-green">On hand</span>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="label">Low Stock Items</div>
+      <div class="value">{{ low_stock_count }}</div>
+      <span class="stat-chip chip-amber">Needs attention</span>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="label">No Stock</div>
+      <div class="value">{{ no_stock_count }}</div>
+      <span class="stat-chip chip-red">Out</span>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">Most Requested</h5>
+          <span class="pill">Top Items</span>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for item in top_requested %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">{{ item.supply__name }}</div>
+                <div class="muted-label">Approved quantity</div>
+              </div>
+              <span class="pill">{{ item.total }}</span>
+            </li>
+          {% empty %}
+            <li class="list-group-item">No approved requests yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100 chart-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">Monthly Outgoing</h5>
+          <span class="pill">Trend</span>
+        </div>
+        <canvas id="outgoingChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">Low Stock</h5>
+          <span class="stat-chip chip-amber">≤ {{ low_stock_threshold }}</span>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for supply in low_stock %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">{{ supply.name }}</div>
+                <div class="muted-label">{{ supply.category|default:'Uncategorized' }}</div>
+              </div>
+              <span class="badge text-bg-warning text-dark">{{ supply.quantity }} {{ supply.unit }}</span>
+            </li>
+          {% empty %}
+            <li class="list-group-item">All items are above the threshold.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">No Stock</h5>
+          <span class="stat-chip chip-red">Reorder</span>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for supply in no_stock %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">{{ supply.name }}</div>
+                <div class="muted-label">{{ supply.category|default:'Uncategorized' }}</div>
+              </div>
+              <span class="badge text-bg-danger">0 {{ supply.unit }}</span>
+            </li>
+          {% empty %}
+            <li class="list-group-item">Nothing is fully out of stock.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const labels = {{ chart_labels|safe }};
+  const data = {{ chart_values|safe }};
+  const ctx = document.getElementById('outgoingChart');
+  if (ctx && labels.length) {
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Outgoing quantity',
+          data: data,
+          borderColor: '#c1121f',
+          backgroundColor: 'rgba(193, 18, 31, 0.18)',
+          tension: 0.25,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#f28c28',
+          pointBorderColor: '#c1121f',
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { color: '#6c757d' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+          x: { ticks: { color: '#6c757d' }, grid: { display: false } }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

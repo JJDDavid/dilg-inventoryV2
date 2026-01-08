@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+  .login-hero { min-height: calc(100vh - 120px); display: grid; place-items: center; }
+  .login-card { border-radius: 18px; overflow: hidden; border: none; }
+  .login-card h3 { font-weight: 800; }
+  .login-card .brand-logo-hero { width: 60px; height: 60px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(193,18,31,0.1), rgba(242,140,40,0.18)); }
+  .login-card .brand-logo-hero img { border-radius: 20px; width: 44px; height: 44px; object-fit: contain; }
+  .login-card input[type="text"],
+  .login-card input[type="password"] {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #e0e4ec;
+    padding: 12px 14px;
+  }
+  .login-card input[type="text"]:focus,
+  .login-card input[type="password"]:focus {
+    border-color: #f28c28;
+    box-shadow: 0 0 0 0.18rem rgba(242, 140, 40, 0.28);
+    outline: none;
+  }
+  .login-card .helper { color: #6c757d; font-size: 0.95rem; }
+  .login-carousel { background: linear-gradient(135deg, rgba(193,18,31,0.16), rgba(244,180,0,0.12)); border-radius: 18px; padding: 26px; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+  .login-carousel .carousel-item { min-height: 260px; }
+  .login-carousel .badge-soft { background: rgba(241,18,31,0.12); color: #8f0d18; font-weight: 700; border-radius: 999px; padding: 6px 12px; }
+  .login-carousel h4 { font-weight: 800; }
+  .login-carousel p { color: #1f2933; }
+</style>
+
+<div class="login-hero">
+  <div class="container">
+    <div class="row g-4 align-items-center justify-content-center">
+      <div class="col-lg-5">
+        <div class="card login-card shadow-sm">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="brand-logo-hero">
+                <img src="{% static 'img/dilg_logo.png' %}" alt="DILG Logo">
+              </div>
+              <div>
+                <div class="text-uppercase small text-muted fw-bold">DILG Supply Tracker</div>
+                <h3 class="mb-0">Sign in</h3>
+              </div>
+            </div>
+
+            <p class="helper mb-4">Secure access for admins and requestors. Keep your credentials private.</p>
+
+            <form method="post" class="mb-0">
+              {% csrf_token %}
+              {% for field in form %}
+              <div class="mb-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+              {% endfor %}
+              <div class="d-flex align-items-center justify-content-between mt-4">
+                <div class="helper">Forgot your password? Contact your administrator.</div>
+                <button class="btn btn-primary px-4" type="submit">Login</button>
+              </div>
+            </form>
+
+            <div class="mt-3 text-end">
+              <p class="text-muted small mb-1">Need an account? Requestors can sign up below.</p>
+              <a class="btn btn-outline-primary btn-sm" href="{% url 'signup_requestor' %}">Create User Account</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="login-carousel">
+          <div id="loginCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4200">
+            <div class="carousel-indicators" style="bottom: -20px;">
+              <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+              <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+              <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            </div>
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <span class="badge-soft mb-3 d-inline-block">Fast approvals</span>
+                <h4>Turn requests into action</h4>
+                <p>Review and approve supply requests in one place so teams get what they need sooner.</p>
+              </div>
+              <div class="carousel-item">
+                <span class="badge-soft mb-3 d-inline-block">Real-time stock</span>
+                <h4>Know what is available</h4>
+                <p>Live visibility on low stock helps you replenish before operations slow down.</p>
+              </div>
+              <div class="carousel-item">
+                <span class="badge-soft mb-3 d-inline-block">Secure access</span>
+                <h4>Protected by design</h4>
+                <p>Role-based access keeps admin controls separate from requestor actions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

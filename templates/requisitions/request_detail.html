@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Request #{{ req.id }}</h2>
+{% if req.is_archived %}
+  <div class="alert alert-secondary py-2 mb-3">This request is removed from active lists but kept in history.</div>
+{% endif %}
+{% if shortages %}
+  <div class="alert alert-warning">Cannot approve: item request is low on stock.</div>
+{% endif %}
+{% if req.status == 'approved' %}
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="fw-bold mb-1">Request Approved</div>
+    <div class="text-muted small">Approved on {{ req.decision_at|date:'Y-m-d H:i' }} by {{ req.decided_by.get_full_name|default:req.decided_by.username }}</div>
+    <div class="text-muted small">Requester: {{ req.requester_name|default:req.user.get_full_name|default:req.user.username }}</div>
+    <div class="text-muted small">Office Section: {{ req.department|default:'-' }}</div>
+  </div>
+</div>
+{% endif %}
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-3"><strong>Date Submitted:</strong> {{ req.requested_at|date:'Y-m-d' }}</div>
+      <div class="col-md-3"><strong>Full Name:</strong> {{ req.requester_name|default:req.user.get_full_name|default:req.user.username }}</div>
+      <div class="col-md-3"><strong>ID:</strong> {{ req.organization_name|default:'-' }}</div>
+      <div class="col-md-3"><strong>Office Section:</strong> {{ req.department|default:'-' }}</div>
+      <div class="col-md-3"><strong>Status:</strong> <span class="badge bg-{% if req.status == 'approved' %}success{% elif req.status == 'rejected' %}danger{% else %}warning text-dark{% endif %}">{{ req.get_status_display }}</span></div>
+    </div>
+    <div class="mt-3">
+      {% if req.status == 'pending' %}
+      <form method="post" action="{% url 'approve_request' req.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-success" {% if shortages %}disabled{% endif %}>Approve Request</button>
+      </form>
+      <form method="post" action="{% url 'reject_request' req.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger">Reject</button>
+      </form>
+      {% elif not req.is_archived %}
+      <form method="post" action="{% url 'archive_request' req.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-outline-secondary" onclick="return confirm('Remove this request from active lists? It will remain in history.');">Remove from active list</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Items</h5>
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:90px">Qty.</th>
+          <th>Item / Description</th>
+          <th>Size / Specification</th>
+          <th>Category</th>
+          <th style="width:140px">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.quantity }} {{ item.supply.unit }}</td>
+          <td>
+            <div class="fw-semibold">{{ item.supply.name }}</div>
+            <div class="small text-muted">{{ item.supply.description|default:'-' }}</div>
+          </td>
+          <td>{{ item.supply.size_spec|default:'-' }}</td>
+          <td>{{ item.supply.category|default:'—' }}</td>
+          <td>
+            {% if item.is_shortage %}
+              <span class="badge text-bg-warning text-dark">Low Stock</span>
+            {% else %}
+              <span class="badge text-bg-success">OK</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if req.notes %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h6 class="card-title mb-1">Notes</h6>
+    <div>{{ req.notes }}</div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

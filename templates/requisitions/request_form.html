@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% now "Y-m-d" as today_str %}
+{% block content %}
+<style>
+  .request-hero {
+    background: linear-gradient(120deg, rgba(193, 18, 31, 0.08), rgba(244, 180, 0, 0.14));
+    border: 1px solid rgba(0,0,0,0.03);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .request-hero h2 { margin: 0 0 6px 0; }
+  .request-hero p { margin: 0; color: #6c757d; }
+  .section-label {
+    font-weight: 800;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #8f0d18;
+    margin-bottom: 10px;
+  }
+  .request-card {
+    border-radius: 18px;
+    border: 1px solid #eceef5;
+  }
+  .table thead th {
+    background: linear-gradient(90deg, rgba(244, 180, 0, 0.15), rgba(242, 140, 40, 0.1));
+    border: none;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+  }
+  .table tbody td { vertical-align: middle; }
+  .qty-col { max-width: 140px; }
+  .notes-box { min-height: 120px; }
+</style>
+
+<div class="request-hero">
+  <h2 class="mb-1">Supply Request</h2>
+  <p>Fill out the requisition header; the items below come from your selection. Adjust quantities/prices if needed, then submit.</p>
+</div>
+
+{% if not supplies %}
+<div class="alert alert-warning">No items selected. Go to <a href="{% url 'request_select_supplies' %}">Select Supplies</a> first.</div>
+{% endif %}
+
+<div class="mb-3">
+  <a class="btn btn-outline-primary" href="{% url 'request_select_supplies' %}">Select Supplies</a>
+</div>
+
+<form method="post" class="card card-body shadow-sm request-card">
+  {% csrf_token %}
+  <div class="section-label">Request Header</div>
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Date Submitted</label>
+      <input type="text" class="form-control" value="{{ today_str }}" disabled>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Full Name</label>
+      <input type="text" name="requester_name" value="{{ requester_name }}" class="form-control" placeholder="Full name" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">ID</label>
+      <input type="text" name="organization_name" value="{{ organization_name }}" class="form-control" placeholder="ID" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Office Section</label>
+      <select name="office_section" class="form-select" required>
+        <option value="">Select section</option>
+        <option value="Local Government Capacity Development" {% if office_section == 'Local Government Capacity Development' %}selected{% endif %}>Local Government Capacity Development</option>
+        <option value="Local Government Monitoring and Evaluation" {% if office_section == 'Local Government Monitoring and Evaluation' %}selected{% endif %}>Local Government Monitoring and Evaluation</option>
+        <option value="Finannce and Administrative" {% if office_section == 'Finannce and Administrative' %}selected{% endif %}>Finannce and Administrative</option>
+      </select>
+    </div>
+  </div>
+  <div class="section-label mt-2">Items</div>
+  <div class="table-responsive">
+    <table class="table align-middle table-hover">
+      <thead>
+        <tr>
+          <th class="qty-col">Qty.</th>
+          <th>Item / Description</th>
+          <th>Size / Specification</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for supply in supplies %}
+        <tr>
+          <td>
+            <input type="number" min="0" name="quantity_{{ supply.id }}" class="form-control form-control-sm qty-input" placeholder="0" data-row="row-{{ supply.id }}" value="{% if supply.prefill_qty %}{{ supply.prefill_qty }}{% endif %}">
+            <div class="form-text">Available: {{ supply.quantity }} {{ supply.unit }}</div>
+          </td>
+          <td>
+            <div class="fw-semibold">{{ supply.name }}</div>
+            <div class="small text-muted">{{ supply.description|default:'-' }}</div>
+          </td>
+          <td>{{ supply.size_spec|default:'-' }}</td>
+          <td>{{ supply.category|default:'—' }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center">No supplies available.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mb-3 mt-2">
+    <label class="form-label">Notes</label>
+    <textarea name="notes" class="form-control notes-box" rows="3" placeholder="Add special instructions or delivery notes.">{{ notes }}</textarea>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary" type="submit">Submit Request</button>
+    <a class="btn btn-secondary" href="{% url 'request_list' %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

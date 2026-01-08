@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+  .signup-hero { min-height: calc(100vh - 120px); display: grid; place-items: center; }
+  .signup-card { border-radius: 18px; overflow: hidden; border: none; }
+  .signup-card h3 { font-weight: 800; }
+  .signup-card .brand-logo-hero { width: 60px; height: 60px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(193,18,31,0.1), rgba(242,140,40,0.18)); }
+  .signup-card .brand-logo-hero img { width: 44px; height: 44px; object-fit: contain; }
+  .signup-card input[type="text"],
+  .signup-card input[type="password"] {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #e0e4ec;
+    padding: 12px 14px;
+  }
+  .signup-card input[type="text"]:focus,
+  .signup-card input[type="password"]:focus {
+    border-color: #f28c28;
+    box-shadow: 0 0 0 0.18rem rgba(242, 140, 40, 0.28);
+    outline: none;
+  }
+  .signup-card .helper { color: #6c757d; font-size: 0.95rem; }
+  .signup-info { background: linear-gradient(135deg, rgba(193,18,31,0.16), rgba(244,180,0,0.12)); border-radius: 18px; padding: 28px; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+  .signup-info .badge-soft { background: rgba(241,18,31,0.12); color: #8f0d18; font-weight: 700; border-radius: 999px; padding: 6px 12px; }
+  .signup-info h4 { font-weight: 800; }
+  .signup-info ul { padding-left: 1.1rem; }
+  .signup-info li { margin-bottom: 0.4rem; color: #1f2933; }
+</style>
+
+<div class="signup-hero">
+  <div class="container">
+    <div class="row g-4 align-items-center justify-content-center">
+      <div class="col-lg-5">
+        <div class="card signup-card shadow-sm">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="brand-logo-hero">
+                <img src="{% static 'img/dilg_logo.png' %}" alt="DILG Logo">
+              </div>
+              <div>
+                <div class="text-uppercase small text-muted fw-bold">DILG Supply Tracker</div>
+                <h3 class="mb-0">Create User Account</h3>
+              </div>
+            </div>
+
+            <p class="helper mb-4">For requestors only. Admin/Supply Manager accounts are provisioned separately.</p>
+
+            <form method="post" class="mb-0">
+              {% csrf_token %}
+              {% for field in form %}
+              <div class="mb-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+              {% endfor %}
+              <div class="d-flex align-items-center justify-content-between mt-3">
+                <a class="btn btn-outline-secondary" href="{% url 'login' %}">Back to Login</a>
+                <button class="btn btn-primary px-4" type="submit">Create Account</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="signup-info">
+          <span class="badge-soft mb-3 d-inline-block">Why sign up?</span>
+          <h4 class="mb-2">Request supplies with confidence</h4>
+          <p class="helper mb-3">A dedicated requestor account keeps your submissions organized and traceable.</p>
+          <ul class="list-unstyled mb-3">
+            <li>Track your pending and approved requests in one place.</li>
+            <li>Get notified faster when items are ready for pickup.</li>
+            <li>Keep audit-friendly records tied to your username.</li>
+          </ul>
+          <div class="helper mb-1 fw-bold">Tip</div>
+          <p class="helper mb-0">Use a work email-style username so approvers recognize you quickly.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
